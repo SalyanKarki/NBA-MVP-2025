@@ -24,27 +24,18 @@ The data used for training the model was taken from **[Basketball Reference](htt
 which provides historical MVP voting data and player statistics.
 """)
 
-# Load data (handle missing file with file uploader)
-uploaded_file = st.file_uploader("Upload the MVP data CSV", type=["csv"])
-if uploaded_file is not None:
-    top_5_per_year = pd.read_csv(uploaded_file)
-    st.success("File uploaded successfully!")
-else:
-    try:
-        top_5_per_year = pd.read_csv("top5.csv")  
-    except FileNotFoundError:
-        st.error("No data available. Please upload 'top5.csv' to continue.")
-        st.stop()  # Stop execution if no file is available
+# Load data
+try:
+    top_5_per_year = pd.read_csv("top5.csv")  
+except FileNotFoundError:
+    st.error("No data available. Please ensure 'top5.csv' is present in the directory.")
+    st.stop()  # Stop execution if no file is available
 
 # Dropdown to select year
 selected_year = st.selectbox("Select a Year", sorted(top_5_per_year["Year"].unique(), reverse=True))
 
 # Filter data for the selected year
-filtered_df = top_5_per_year[top_5_per_year["Year"] == selected_year].copy()
-
-# Adjust ranking to be 1-based instead of 0-based
-filtered_df["Rk"] += 1
-filtered_df["Predicted_Rk"] += 1
+filtered_df = top_5_per_year[top_5_per_year["Year"] == selected_year]
 
 # Display the table
 st.write(f"### Top 5 MVP Candidates for {selected_year}:")
