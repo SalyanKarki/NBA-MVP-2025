@@ -1,7 +1,5 @@
 import streamlit as st
 import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
 
 # Streamlit app title
 st.title("NBA MVP Top 5 Predictions (1982-2024) Using Ridge Regression")
@@ -61,27 +59,3 @@ st.markdown("""
 - **Predicted_Rk**: The rank predicted by the Ridge Regression model.  
 - **Diff**: Difference between the predicted and actual ranking (**negative = underestimated**, **positive = overestimated**).  
 """)
-
-# --- Visualization Section ---
-
-# 1. Bar chart: Top 5 Players with the Highest MVP Share
-st.subheader(f"Top 5 Players with the Highest MVP Share in {selected_year}")
-
-top_share = filtered_df.nlargest(5, "Share")  # Get top 5 players by MVP share
-fig, ax = plt.subplots(figsize=(8, 4))
-sns.barplot(x="Share", y="Player", data=top_share, ax=ax, palette="Blues_r")
-ax.set_xlabel("MVP Vote Share (%)")
-ax.set_ylabel("Player")
-ax.set_title("Top 5 MVP Share Leaders")
-st.pyplot(fig)
-
-# 2. Bar chart: Top 5 Players with the Highest Difference (Predicted vs. Actual Rank)
-st.subheader(f"Top 5 Players with the Highest Rank Prediction Difference in {selected_year}")
-
-top_diff = filtered_df.nlargest(5, "Diff", key=abs)  # Get top 5 by absolute difference
-fig, ax = plt.subplots(figsize=(8, 4))
-sns.barplot(x="Diff", y="Player", data=top_diff, ax=ax, palette="Reds_r")
-ax.set_xlabel("Difference in Rank (Predicted - Actual)")
-ax.set_ylabel("Player")
-ax.set_title("Top 5 Players with Largest Rank Prediction Difference")
-st.pyplot(fig)
