@@ -1,39 +1,87 @@
 import streamlit as st
 import pandas as pd
-import os
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 # Streamlit app title
 st.title("NBA MVP Top 5 Predictions (1982-2024) Using Ridge Regression")
 
-# Print working directory for debugging
-cwd = os.getcwd()
-st.write(f"Current Working Directory: {cwd}")
+# Explanation of Ridge Regression
+st.markdown("""
+### About This Model 🏀📊  
+This model predicts the top 5 MVP candidates for each season from **1982 to 2024** using **Ridge Regression**.  
+Ridge Regression is a machine learning technique that improves predictions by **penalizing large coefficients**, making the model more stable and reducing overfitting.
 
-# File path for CSV
-file_path = os.path.join(cwd, "top_5.csv")
+The model's performance is measured using **Mean Average Precision (MAP)**, which is **0.7599**.  
+- **Mean Average Precision (MAP)**: Measures how well the model ranks the correct players at the top.  
+  - A score of **1.0** means perfect ranking.  
+  - Our score of **0.7599** indicates strong but not perfect predictions.
 
-# Check if the CSV file exists
-if os.path.exists(file_path):
-    top_5_per_year = pd.read_csv(file_path)
-    st.success("Loaded 'top_5.csv' from the server!")
+### 📂 Where to Find the Code  
+The full **data scraping, data cleaning, and model training** process can be found in this GitHub repository:  
+👉 [NBA-MVP-2025 GitHub Repo](https://github.com/SalyanKarki/NBA-MVP-2025)  
+
+### 📊 Data Source  
+The data used for training the model was taken from **[Basketball Reference](https://www.basketball-reference.com/)**,  
+which provides historical MVP voting data and player statistics.
+""")
+
+# Load data (handle missing file with file uploader)
+uploaded_file = st.file_uploader("Upload the MVP data CSV", type=["csv"])
+if uploaded_file is not None:
+    top_5_per_year = pd.read_csv(uploaded_file)
+    st.success("File uploaded successfully!")
 else:
-    # If file is missing, allow user to upload it
-    st.warning("File 'top_5.csv' not found. Please upload it below.")
-    uploaded_file = st.file_uploader("Upload the MVP data CSV", type=["csv"])
-
-    if uploaded_file is not None:
-        top_5_per_year = pd.read_csv(uploaded_file)
-        st.success("File uploaded successfully!")
-    else:
-        st.error("No data available. Please upload 'top_5.csv' to continue.")
+    try:
+        top_5_per_year = pd.read_csv("top5.csv")  
+    except FileNotFoundError:
+        st.error("No data available. Please upload 'top5.csv' to continue.")
         st.stop()  # Stop execution if no file is available
 
 # Dropdown to select year
 selected_year = st.selectbox("Select a Year", sorted(top_5_per_year["Year"].unique(), reverse=True))
 
 # Filter data for the selected year
-filtered_df = top_5_per_year[top_5_per_year["Year"] == selected_year]
+filtered_df = top_5_per_year[top_5_per_year["Year"] == selected_year].copy()
+
+# Adjust ranking to be 1-based instead of 0-based
+filtered_df["Rk"] += 1
+filtered_df["Predicted_Rk"] += 1
 
 # Display the table
-st.write(f"Top 5 MVP Candidates for {selected_year}:")
+st.write(f"### Top 5 MVP Candidates for {selected_year}:")
 st.dataframe(filtered_df[["Player", "Share", "Rk", "Predicted_Rk", "Diff"]].reset_index(drop=True))
+
+# Column explanations
+st.markdown("""
+### Column Definitions 📊  
+- **Player**: The name of the MVP candidate.  
+- **Share**: The percentage of MVP votes received (1.0 = 100% of votes).  
+- **Rk (Rank)**: The actual ranking based on votes.  
+- **Predicted_Rk**: The rank predicted by the Ridge Regression model.  
+- **Diff**: Difference between the predicted and actual ranking (**negative = underestimated**, **positive = overestimated**).  
+""")
+
+# --- Visualization Section ---
+
+# 1. Bar chart: Top 5 Players with the Highest MVP Share
+st.subheader(f"Top 5 Players with the Highest MVP Share in {selected_year}")
+
+top_share = filtered_df.nlargest(5, "Share")  # Get top 5 players by MVP share
+fig, ax = plt.subplots(figsize=(8, 4))
+sns.barplot(x="Share", y="Player", data=top_share, ax=ax, palette="Blues_r")
+ax.set_xlabel("MVP Vote Share (%)")
+ax.set_ylabel("Player")
+ax.set_title("Top 5 MVP Share Leaders")
+st.pyplot(fig)
+
+# 2. Bar chart: Top 5 Players with the Highest Difference (Predicted vs. Actual Rank)
+st.subheader(f"Top 5 Players with the Highest Rank Prediction Difference in {selected_year}")
+
+top_diff = filtered_df.nlargest(5, "Diff", key=abs)  # Get top 5 by absolute difference
+fig, ax = plt.subplots(figsize=(8, 4))
+sns.barplot(x="Diff", y="Player", data=top_diff, ax=ax, palette="Reds_r")
+ax.set_xlabel("Difference in Rank (Predicted - Actual)")
+ax.set_ylabel("Player")
+ax.set_title("Top 5 Players with Largest Rank Prediction Difference")
+st.pyplot(fig)
