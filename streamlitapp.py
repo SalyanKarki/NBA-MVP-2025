@@ -24,11 +24,6 @@ st.write(f"Top 5 MVP Candidates for {selected_year}:")
 st.dataframe(filtered_df[["Player", "Share", "Rk", "Predicted_Rk", "Diff"]].reset_index(drop=True))
 
 
-# In[17]:
-
-
-jupyter nbconvert --to script streamlitapp.ipynb
-
 
 # In[ ]:
 
