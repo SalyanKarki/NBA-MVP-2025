@@ -1,2 +1,2 @@
 # NBAmvp2025
- Machine learning model that predicts the 2025 NBA MVP.
+Projected hosted using streamlit at: https://nba-mvp-2025-salkarki.streamlit.app/ 
